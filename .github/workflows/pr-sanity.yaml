@@ -1,0 +1,28 @@
+name: Sanity Test
+
+on:
+  pull_request:
+    branches:
+    - main
+    - release-*
+jobs:
+  build_push:
+    if: (github.repository == 'netobserv/must-gather')
+    name: Pull Request Sanity
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.19' # The Go version to download (if necessary) and use.
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+      env:
+        SHELLCHECK_OPTS: -a -e SC2016 --source-path=./collection-scripts
+      with:
+         check_together: 'yes'
+         version: v0.8.0
+         scandir: './collection-scripts/'

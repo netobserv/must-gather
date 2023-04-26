@@ -1,0 +1,25 @@
+#!/bin/bash -x
+
+DIR_NAME=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source "${DIR_NAME}/common.sh"
+check_command
+
+NO_NS="$(oc get subs -A -o template --template '{{range .items}}{{if eq .spec.name "netobserv-operator"}}{{.metadata.namespace}}{{end}}{{end}}')"
+if [ -z "${NO_NS}" ]; then
+    echo "INFO: Network Observability namespace is not detected. Skipping."
+    exit 0
+fi
+
+CRD=$(/usr/bin/oc get crd | grep netobserv.io | awk '{print $1}')
+obj=$(/usr/bin/oc get "${CRD}" -o custom-columns=:metadata.name --no-headers)
+fc_ns=$(/usr/bin/oc get "${CRD}" "${obj}" --output=jsonpath='{.spec.namespace}')
+
+if [ -z "${fc_ns}" ]; then
+    echo "INFO: Network Observability flow collector object namespace is not detected. Skipping."
+    exit 0
+fi
+
+"${DIR_NAME}"/version
+oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${NO_NS}"
+oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}"
+oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}-privileged"

@@ -1,0 +1,74 @@
+#!/bin/bash
+
+export BASE_COLLECTION_PATH="${BASE_COLLECTION_PATH:-/must-gather}"
+DIR_NAME=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+function main() {
+  declare mandatory_scripts=(
+    "crds"
+    "resources"
+    "webhooks"
+  )
+  declare requested_scripts=("${mandatory_scripts[@]}")
+
+  parse_flags "$@"
+  run_scripts
+  sync
+  exit 0
+}
+
+function parse_flags {
+  while :; do
+    case $1 in
+      --help)
+        help
+        exit 0
+        ;;
+      --images)
+        requested_scripts+=("images")
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -?*)
+        printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+        ;;
+      *) # Default case: No more options, so break out of the loop.
+        break
+    esac
+    shift
+  done
+}
+
+function help {
+    echo "\
+Usage: oc adm must-gather --image=quay.io/netobserv/must-gather -- /usr/bin/gather [params...]
+
+  A client tool for gathering NetObserv information in an OpenShift cluster
+
+  Available options:
+
+  > To see this help menu and exit use
+  --help
+
+  > The tool will always collect all control-plane logs and information.
+  > This will include:"
+    for collector in "${mandatory_scripts[@]}" ; do
+    echo "  > - $collector"
+    done
+    echo "\
+
+"
+}
+
+function run_scripts {
+  for script in "${requested_scripts[@]}";
+  do
+    script_name="gather_${script}"
+    echo "running ${script_name}"
+    eval USR_BIN_GATHER=1 "${DIR_NAME}/${script_name}"
+  done
+}
+
+main "$@"; exit

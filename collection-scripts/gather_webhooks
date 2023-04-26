@@ -1,6 +1,7 @@
 #!/bin/bash -x
 
 DIR_NAME=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# shellcheck source=/dev/null
 source "${DIR_NAME}/common.sh"
 check_command
 
@@ -18,6 +19,3 @@ export -f gather_validating_wh
 
 validating_wh=$(/usr/bin/oc get validatingwebhookconfiguration -o custom-columns=NAME:.metadata.name --no-headers | grep -i flowcollectorconversionwebhook)
 echo "${validating_wh[@]}" | tr ' ' '\n' | xargs -t -I{}  --max-args=1 sh -c 'gather_validating_wh $1' -- {}
-
-
-exit 0

@@ -65,8 +65,8 @@ You can also specify the registry using the variable `IMAGE_REGISTRY` (default i
 
 The targets for `make` are as follows:
 - `build`: builds the image with the supplied name and pushes it
-- `docker-build`: builds the image but does not push it
-- `docker-push`: pushes an already-built image
+- `image-build`: builds the image but does not push it
+- `image-push`: pushes an already-built image
 
 For example:
 ```sh

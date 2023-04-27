@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REGISTRY_USERNAME: netobserv+github_ci
-      QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
       REGISTRY_NAMESPACE: netobserv
     steps:
       - name: Checkout the latest code
@@ -24,8 +23,15 @@ jobs:
           make check MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
       - name: Build image
         run: |
-          make docker-build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
+          make image-build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
+      - name: podman login to quay.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ secrets.QUAY_SECRET }}
+          registry: quay.io
+      - name: get short sha
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Push image
         run: |
-          echo $QUAY_PASSWORD | docker login -u $REGISTRY_USERNAME --password-stdin quay.io
-          make build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
+          make build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather:${{ env.short_sha }}

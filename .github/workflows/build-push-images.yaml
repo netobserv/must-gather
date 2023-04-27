@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REGISTRY_USERNAME: netobserv+github_ci
+      REGISTRY_PASSWORD: ${{ secrets.QUAY_SECRET }}
       REGISTRY_NAMESPACE: netobserv
     steps:
       - name: Checkout the latest code
@@ -28,7 +29,7 @@ jobs:
         uses: redhat-actions/podman-login@v1
         with:
           username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ secrets.QUAY_SECRET }}
+          password: ${{ env.REGISTRY_PASSWORD }}
           registry: quay.io
       - name: get short sha
         run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV

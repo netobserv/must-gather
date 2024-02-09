@@ -11,7 +11,7 @@ if [ -z "${NO_NS}" ]; then
     exit 0
 fi
 
-CRD=$(/usr/bin/oc get crd | grep netobserv.io | awk '{print $1}')
+CRD="flowcollectors.flows.netobserv.io"
 obj=$(/usr/bin/oc get "${CRD}" -o custom-columns=:metadata.name --no-headers)
 fc_ns=$(/usr/bin/oc get "${CRD}" "${obj}" --output=jsonpath='{.spec.namespace}')
 

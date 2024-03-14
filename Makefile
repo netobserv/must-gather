@@ -1,7 +1,9 @@
 IMAGE_REGISTRY ?= quay.io
 IMAGE_TAG ?= latest
 
-BUILD_VERSION := $(shell git describe --long HEAD)
+TAG_COMMIT := $(shell git rev-list --abbrev-commit --tags --max-count=1)
+TAG := $(shell git describe --abbrev=0 --tags ${TAG_COMMIT} 2>/dev/null || true)
+BUILD_VERSION := $(TAG:v%=%)
 
 # Image building tool (docker / podman)
 ifndef OCI_BIN
@@ -21,9 +23,14 @@ endif
 .PHONY: build
 build: check-image-env image-build image-push ## check MUST_GATHER_IMAGE, build and push NetObserv collection image.
 
-# check
-check: ## Run shellcheck against bash collection scripts.
+.PHONY: lint
+lint: ## Run shellcheck against bash collection scripts.
+ifeq (, $(shell which shellcheck))
+	@echo "### shellcheck could not be found, skipping shell lint"
+else
+	@echo "### Run shellcheck against collection bash scripts"
 	shellcheck -e SC2016 collection-scripts/*
+endif
 
 .PHONY: image-build
 image-build: check-image-env ## Build NetObserv collection image.

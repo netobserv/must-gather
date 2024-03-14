@@ -21,7 +21,7 @@ jobs:
           ref: ${{ github.ref }}
       - name: Check build
         run: |
-          make check MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
+          make lint MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
       - name: Build image
         run: |
           make image-build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather

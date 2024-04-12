@@ -21,6 +21,7 @@ if [ -z "${fc_ns}" ]; then
 fi
 
 "${DIR_NAME}"/version
+oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "${CRD}/${obj}"
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${NO_NS}"
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}"
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}-privileged"

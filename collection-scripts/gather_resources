@@ -11,17 +11,23 @@ if [ -z "${NO_NS}" ]; then
     exit 0
 fi
 
-CRD="flowcollectors.flows.netobserv.io"
-obj=$(/usr/bin/oc get "${CRD}" -o custom-columns=:metadata.name --no-headers)
-fc_ns=$(/usr/bin/oc get "${CRD}" "${obj}" --output=jsonpath='{.spec.namespace}')
+FC_CRD="flowcollectors.flows.netobserv.io"
+fc_obj=$(/usr/bin/oc get "${FC_CRD}" -o custom-columns=:metadata.name --no-headers)
+fc_ns=$(/usr/bin/oc get "${FC_CRD}" "${fc_obj}" --output=jsonpath='{.spec.namespace}')
 
 if [ -z "${fc_ns}" ]; then
     echo "INFO: Network Observability flow collector object namespace is not detected. Skipping."
     exit 0
 fi
 
+METRIC_CRD="flowmetrics.flows.netobserv.io"
+metric_objs=$(/usr/bin/oc get "${METRIC_CRD}" -n "${fc_ns}" -o custom-columns=:metadata.name --no-headers)
+
 "${DIR_NAME}"/version
-oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "${CRD}/${obj}"
+oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "${FC_CRD}/${fc_obj}"
+if [ -n "${metric_objs}" ]; then
+  oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" -n "${fc_ns}" "${METRIC_CRD} ${metric_objs}"
+fi
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${NO_NS}"
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}"
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}-privileged"

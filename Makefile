@@ -6,13 +6,21 @@ TAG := $(shell git describe --abbrev=0 --tags ${TAG_COMMIT} 2>/dev/null || true)
 BUILD_VERSION := $(TAG:v%=%)
 
 # Image building tool (docker / podman)
-ifndef OCI_BIN
-ifeq (,$(shell which podman 2>/dev/null))
-OCI_BIN=docker
-else
-OCI_BIN=podman
-endif
-endif
+# Image building tool (docker / podman) - docker is preferred in CI
+OCI_BIN_PATH := $(shell which podman 2>/dev/null || which docker)
+OCI_BIN ?= $(shell basename ${OCI_BIN_PATH})
+
+# build a single arch target provided as argument
+define build_target
+	echo 'building image for arch $(1)'; \
+	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" --output plain -t  ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}-$(1):${IMAGE_TAG} -f Dockerfile .;
+endef
+
+# push a single arch target image
+define push_target
+	echo 'pushing image ${IMAGE}-$(1)'; \
+	DOCKER_BUILDKIT=1 $(OCI_BIN) push ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}-$(1):${IMAGE_TAG};
+endef
 
 # MUST_GATHER_IMAGE needs to be passed explicitly to avoid accidentally pushing to netobserv/must-gather
 check-image-env: ## Check MUST_GATHER_IMAGE make sure its set.
@@ -34,12 +42,13 @@ endif
 
 .PHONY: image-build
 image-build: check-image-env ## Build NetObserv collection image.
-	$(OCI_BIN) build --build-arg BUILD_VERSION="${BUILD_VERSION}" -t ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}:${IMAGE_TAG} .
+	trap 'exit' INT; \
+	$(foreach target,$(MULTIARCH_TARGETS),$(call build_target,$(target)))
 
 .PHONY: image-push
 image-push: check-image-env ## Push NetObserv collection image.
-	$(OCI_BIN) push ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}:${IMAGE_TAG}
-
+	trap 'exit' INT; \
+	$(foreach target,$(MULTIARCH_TARGETS),$(call push_target,$(target)))
 
 .PHONY: help
 help: ## Display this help.

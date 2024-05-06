@@ -7,13 +7,13 @@ BUILD_VERSION := $(TAG:v%=%)
 
 # Image building tool (docker / podman)
 # Image building tool (docker / podman) - docker is preferred in CI
-OCI_BIN_PATH := $(shell which podman 2>/dev/null || which docker)
+OCI_BIN_PATH := $(shell which docker 2>/dev/null || which podman)
 OCI_BIN ?= $(shell basename ${OCI_BIN_PATH})
 
 # build a single arch target provided as argument
 define build_target
 	echo 'building image for arch $(1)'; \
-	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" --output plain -t  ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}-$(1):${IMAGE_TAG} -f Dockerfile .;
+	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" -t  ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}-$(1):${IMAGE_TAG} -f Dockerfile .;
 endef
 
 # push a single arch target image

@@ -1,4 +1,5 @@
-FROM quay.io/centos/centos:stream8
+
+FROM quay.io/centos/centos:stream9
 
 RUN set -x; \
     OC_TAR_URL="https://mirror.openshift.com/pub/openshift-v4/$(uname -m)/clients/ocp/latest/openshift-client-linux.tar.gz" && \

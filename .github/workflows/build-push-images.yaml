@@ -14,6 +14,7 @@ jobs:
       REGISTRY_USERNAME: netobserv+github_ci
       REGISTRY_PASSWORD: ${{ secrets.QUAY_SECRET }}
       REGISTRY_NAMESPACE: netobserv
+      MULTIARCH_TARGETS: amd64 arm64 ppc64le s390x
     steps:
       - name: Checkout the latest code
         uses: actions/checkout@v2
@@ -24,7 +25,7 @@ jobs:
           make lint MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
       - name: Build image
         run: |
-          make image-build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
+          MULTIARCH_TARGETS="${{ env.MULTIARCH_TARGETS }}" make image-build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
       - name: podman login to quay.io
         uses: redhat-actions/podman-login@v1
         with:
@@ -37,4 +38,4 @@ jobs:
       - name: Push image
         run: |
           IMAGE_TAG=${{ env.short_sha }}
-          make build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
+          MULTIARCH_TARGETS="${{ env.MULTIARCH_TARGETS }}" make build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather

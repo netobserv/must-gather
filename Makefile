@@ -13,13 +13,13 @@ OCI_BIN ?= $(shell basename ${OCI_BIN_PATH})
 # build a single arch target provided as argument
 define build_target
 	echo 'building image for arch $(1)'; \
-	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" -t  ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}-$(1):${IMAGE_TAG} -f Dockerfile .;
+	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" -t  ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}:${IMAGE_TAG}-$(1) -f Dockerfile .;
 endef
 
 # push a single arch target image
 define push_target
 	echo 'pushing image ${IMAGE}-$(1)'; \
-	DOCKER_BUILDKIT=1 $(OCI_BIN) push ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}-$(1):${IMAGE_TAG};
+	DOCKER_BUILDKIT=1 $(OCI_BIN) push ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}:${IMAGE_TAG}-$(1);
 endef
 
 # MUST_GATHER_IMAGE needs to be passed explicitly to avoid accidentally pushing to netobserv/must-gather

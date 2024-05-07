@@ -14,7 +14,7 @@ OCI_BIN ?= $(shell basename ${OCI_BIN_PATH})
 # build a single arch target provided as argument
 define build_target
 	echo 'building image for arch $(1)'; \
-	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" -t  ${IMAG}-$(1) -f Dockerfile .;
+	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" -t  ${IMAGE}-$(1) -f Dockerfile .;
 endef
 
 # push a single arch target image

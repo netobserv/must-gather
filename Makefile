@@ -1,9 +1,10 @@
 IMAGE_REGISTRY ?= quay.io
 IMAGE_TAG ?= latest
-
+IMAGE ?= $(IMAGE_REGISTRY)/$(MUST_GATHER_IMAGE():$(IMAGE_TAG)
 TAG_COMMIT := $(shell git rev-list --abbrev-commit --tags --max-count=1)
 TAG := $(shell git describe --abbrev=0 --tags ${TAG_COMMIT} 2>/dev/null || true)
 BUILD_VERSION := $(TAG:v%=%)
+MULTIARCH_TARGETS ?= amd64
 
 # Image building tool (docker / podman)
 # Image building tool (docker / podman) - docker is preferred in CI
@@ -13,13 +14,13 @@ OCI_BIN ?= $(shell basename ${OCI_BIN_PATH})
 # build a single arch target provided as argument
 define build_target
 	echo 'building image for arch $(1)'; \
-	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" -t  ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}:${IMAGE_TAG}-$(1) -f Dockerfile .;
+	DOCKER_BUILDKIT=1 $(OCI_BIN) buildx build --load --platform "$(1)" -t  ${IMAG}-$(1) -f Dockerfile .;
 endef
 
 # push a single arch target image
 define push_target
 	echo 'pushing image ${IMAGE}-$(1)'; \
-	DOCKER_BUILDKIT=1 $(OCI_BIN) push ${IMAGE_REGISTRY}/${MUST_GATHER_IMAGE}:${IMAGE_TAG}-$(1);
+	DOCKER_BUILDKIT=1 $(OCI_BIN) push ${IMAGE}-$(1);
 endef
 
 # MUST_GATHER_IMAGE needs to be passed explicitly to avoid accidentally pushing to netobserv/must-gather
@@ -29,7 +30,7 @@ ifndef MUST_GATHER_IMAGE
 endif
 
 .PHONY: build
-build: check-image-env image-build image-push ## check MUST_GATHER_IMAGE, build and push NetObserv collection image.
+build: check-image-env image-build image-push manifest-build manifest-push ## check MUST_GATHER_IMAGE, build and push NetObserv collection image.
 
 .PHONY: lint
 lint: ## Run shellcheck against bash collection scripts.
@@ -49,6 +50,21 @@ image-build: check-image-env ## Build NetObserv collection image.
 image-push: check-image-env ## Push NetObserv collection image.
 	trap 'exit' INT; \
 	$(foreach target,$(MULTIARCH_TARGETS),$(call push_target,$(target)))
+
+.PHONY: manifest-build
+manifest-build: ## Build MULTIARCH_TARGETS manifest
+	echo 'building manifest $(IMAGE)'
+	DOCKER_BUILDKIT=1 $(OCI_BIN) rmi ${IMAGE} -f
+	DOCKER_BUILDKIT=1 $(OCI_BIN) manifest create ${IMAGE} $(foreach target,$(MULTIARCH_TARGETS), --amend ${IMAGE}-$(target));
+
+.PHONY: manifest-push
+manifest-push: ## Push MULTIARCH_TARGETS manifest
+	@echo 'publish manifest $(IMAGE)'
+ifeq (${OCI_BIN}, docker)
+	DOCKER_BUILDKIT=1 $(OCI_BIN) manifest push ${IMAGE};
+else
+	DOCKER_BUILDKIT=1 $(OCI_BIN) manifest push ${IMAGE} docker://${IMAGE};
+endif
 
 .PHONY: help
 help: ## Display this help.

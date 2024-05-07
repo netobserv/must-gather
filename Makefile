@@ -1,6 +1,6 @@
 IMAGE_REGISTRY ?= quay.io
 IMAGE_TAG ?= latest
-IMAGE ?= $(IMAGE_REGISTRY)/$(MUST_GATHER_IMAGE():$(IMAGE_TAG)
+IMAGE ?= $(IMAGE_REGISTRY)/$(MUST_GATHER_IMAGE):$(IMAGE_TAG)
 TAG_COMMIT := $(shell git rev-list --abbrev-commit --tags --max-count=1)
 TAG := $(shell git describe --abbrev=0 --tags ${TAG_COMMIT} 2>/dev/null || true)
 BUILD_VERSION := $(TAG:v%=%)

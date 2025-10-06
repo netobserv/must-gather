@@ -15,6 +15,22 @@ FC_CRD="flowcollectors.flows.netobserv.io"
 fc_obj=$(/usr/bin/oc get "${FC_CRD}" -o custom-columns=:metadata.name --no-headers)
 fc_ns=$(/usr/bin/oc get "${FC_CRD}" "${fc_obj}" --output=jsonpath='{.spec.namespace}')
 
+is_lokistack=$(/usr/bin/oc get "${FC_CRD}" "${fc_obj}" --output=jsonpath='{.spec.loki.enable}')
+loki_mode=$(/usr/bin/oc get "${FC_CRD}" "${fc_obj}" --output=jsonpath='{.spec.loki.mode}')
+
+if [[ ${is_lokistack} == "true" && ${loki_mode} == "LokiStack" ]]; then
+    loki_ns=$(/usr/bin/oc get "${FC_CRD}" "${fc_obj}" --output=jsonpath='{.spec.loki.lokiStack.namespace}')
+fi
+
+deployment_model=$(/usr/bin/oc get "${FC_CRD}" "${fc_obj}" --output=jsonpath='{.spec.deploymentModel}')
+
+# capture kafka namespace from kafka dns name
+if [[ ${deployment_model} == "Kafka" ]]; then
+    kafka_address=$(/usr/bin/oc get "${FC_CRD}" "${fc_obj}" --output=jsonpath='{.spec.kafka.address}')
+    temp_var=${kafka_address#*.}
+    kafka_ns=${temp_var%%.*}
+fi
+
 if [ -z "${fc_ns}" ]; then
     echo "INFO: Network Observability flow collector object namespace is not detected. Skipping."
     exit 0
@@ -31,3 +47,11 @@ fi
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${NO_NS}"
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}"
 oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${fc_ns}-privileged"
+
+if [[ -n $loki_ns && $loki_ns != "$fc_ns" ]]; then
+    oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${loki_ns}"
+fi 
+
+if [[ -n $kafka_ns && ${kafka_ns} != "$fc_ns" ]]; then
+    oc adm inspect --dest-dir "${BASE_COLLECTION_PATH}" "ns/${kafka_ns}"
+fi

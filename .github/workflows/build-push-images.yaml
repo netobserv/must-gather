@@ -21,9 +21,9 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
       - name: Check build
         run: |
           make lint MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
@@ -31,7 +31,7 @@ jobs:
         run: |
           MULTIARCH_TARGETS="${{ env.MULTIARCH_TARGETS }}" make image-build MUST_GATHER_IMAGE=$REGISTRY_NAMESPACE/must-gather
       - name: podman login to quay.io
-        uses: redhat-actions/podman-login@v1
+        uses: redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603 # v1.7
         with:
           username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ env.REGISTRY_PASSWORD }}

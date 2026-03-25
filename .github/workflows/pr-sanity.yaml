@@ -19,7 +19,7 @@ jobs:
       with:
         go-version: '1.19' # The Go version to download (if necessary) and use.
     - name: Run ShellCheck
-      uses: ludeeus/action-shellcheck@master
+      uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # v2.0.0
       env:
         SHELLCHECK_OPTS: -a -e SC2016 --source-path=./collection-scripts
       with:
